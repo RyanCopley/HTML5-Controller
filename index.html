@@ -1,6 +1,13 @@
 <html>
     <head>
         <title>Controller Demo</title>
+        <style>
+        #imgLogo{
+            -webkit-box-shadow: 17px 14px 24px rgba(50, 50, 50, 0.75);
+-moz-box-shadow:    17px 14px 24px rgba(50, 50, 50, 0.75);
+box-shadow:         17px 14px 24px rgba(50, 50, 50, 0.75);
+        }
+        </style>
         <!-- Include jQuery -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <script src="socket.io.js"></script>
@@ -48,7 +55,9 @@
                     // Apply the transform to the image
                     var tiltLR = safeCapture(data, "tiltLR");
                     var tiltFB = safeCapture(data, "tiltFB");
-                    $("#imgLogo").css("webkit-transform", "rotate(" + tiltLR + "deg) rotate3d(1,0,0, " + ((tiltFB -90)* -1) + "deg)");
+                    var direction = safeCapture(data, "direction");
+                    
+                    $("#imgLogo").css("transform", "rotate3d(1,0,0, " + ((tiltFB -90)* -1) + "deg) rotate3d(0,0,1," + tiltLR + "deg) rotate3d(0,1,0,"+direction+"deg)");
                 });
                 
                 socket.on("KEYPRESS", function (data){
