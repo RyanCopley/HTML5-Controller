@@ -1,0 +1,71 @@
+<html>
+    <head>
+        <title>Controller Demo</title>
+        <!-- Include jQuery -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="socket.io.js"></script>
+        <script>
+            function makePairCode(){
+                var text = "";
+                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            
+                for( var i=0; i < 5; i++ )
+                    text += possible.charAt(Math.floor(Math.random() * possible.length));
+                return text;
+            }
+
+            $(document).ready(function(){
+                var socket = io.connect('http://us-ch01.upadvisor.com:9000');
+                $("#connectionStatus").removeClass("red").addClass("yellow");
+                
+                //The server immediately responds to connections with an IDENTIFY. 
+                socket.on('IDENTIFY', function (data) {
+                    socket.emit('IAM', { "IAM":"gameclient" });
+                    $("#connectionStatus").removeClass("yellow").addClass("green");
+                    
+                    var pairCode = makePairCode();
+                    
+                    var url = encodeURIComponent(document.URL.replace("index", "controller") + "?id=" + pairCode);
+                    //console.log(url);
+                    var img = 'http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=' + url;
+                    
+                    $("#pairCode").text(pairCode);
+                    $("#qrCode").attr("src", img);
+                    
+
+                    sendPairCode(pairCode);
+                });
+                 socket.on("PAIRED",function (data){
+                    //Signalled to be paired. 
+                    console.log("Paired with device!");
+                })
+                
+                function sendPairCode(identifier){
+                    socket.emit("REGISTER", {"IDENTIFIER":identifier});
+                }
+            });
+        </script>
+        
+        <style>
+            .box{
+                width: 100px;
+                height: 100px;
+            }
+            .red{
+                background-color: red;
+            }
+            .yellow{
+                background-color: yellow;
+            }
+            .green{
+                background-color: green;
+            }
+        </style>
+    </head>
+    <body>
+    
+        Pair Code: <span id="pairCode"></span>
+        <div class="box red" id="connectionStatus">Connection</div>
+        QR Code: <img id="qrCode" src="" alt="QR code for this URL" width="150" height="150"/>
+    </body>
+</html

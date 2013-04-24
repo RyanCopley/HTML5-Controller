@@ -1,0 +1,88 @@
+<html>
+    <head>
+        <title>Controller Demo</title>
+        <!-- Include jQuery -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="socket.io.js"></script>
+        <script>
+        function safeCapture(data,property){
+            if (data.hasOwnProperty(property)){
+                return data[property];
+            }
+            return "";
+        }
+
+            $(document).ready(function(){
+                var socket = io.connect('http://us-ch01.upadvisor.com:9000');
+                $("#connectionStatus").removeClass("red").addClass("yellow");
+                
+                //The server immediately responds to connections with an IDENTIFY. 
+                socket.on('IDENTIFY', function (data) {
+                    socket.emit('IAM', { "IAM":"gameclient" });
+                    $("#connectionStatus").removeClass("yellow").addClass("green");
+                    
+                    
+                });
+                
+                socket.on("YOURCODE",function (data){
+                    if ((pairCode=safeCapture(data,"code")) != ""){
+                        var url = encodeURIComponent(document.URL.replace("index.html", "") + "controller.html?id=" + pairCode);
+                        console.log(url);
+                        var img = 'http://chart.apis.google.com/chart?chs=250x250&cht=qr&chl=' + url;
+                        
+                        $("#pairCode").text(pairCode);
+                        $("#qrCode").attr("src", img);
+                    }
+                    
+                });
+                
+                 socket.on("PAIRED",function (data){
+                    $("#pairStatus").removeClass("red").addClass("green");
+                    //Signalled to be paired. 
+                    console.log("Paired with device!");
+                });
+                
+                
+                socket.on("ORIENTATION", function (data){
+                    //console.log("Received orientation");
+                    // Apply the transform to the image
+                    var tiltLR = safeCapture(data, "tiltLR");
+                    var tiltFB = safeCapture(data, "tiltFB");
+                    $("#imgLogo").css("webkit-transform", "rotate(" + tiltLR + "deg) rotate3d(1,0,0, " + ((tiltFB -90)* -1) + "deg)");
+                });
+                
+                socket.on("KEYPRESS", function (data){
+                   console.log(data.key);
+                   $("#keypresses").html($("#keypresses").html()+"<br />"+data.key);
+                });
+                
+            });
+        </script>
+        
+        <style>
+            .box{
+                width: 100px;
+                height: 100px;
+            }
+            .red{
+                background-color: red;
+            }
+            .yellow{
+                background-color: yellow;
+            }
+            .green{
+                background-color: green;
+            }
+        </style>
+    </head>
+    <body>
+    
+        Pair Code: <span id="pairCode"></span>
+        <div class="box red" id="connectionStatus">Connection</div>
+        <div class="box red" id="pairStatus">Pair Status</div>
+        QR Code: <img id="qrCode" src="" alt="QR code for this URL" width="150" height="150"/>
+
+        <img src="html5_logo.png" id="imgLogo" class="logo">
+        <span id="keypresses"> </span>
+    </body>
+</html
